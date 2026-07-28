@@ -39,6 +39,7 @@
       "category": "public.app-category.productivity",
       "target": "dmg"
     },
+    "afterSign": "scripts/afterSign.cjs",
     "win": {
       "icon": "build/icon.png",
       "target": "nsis"

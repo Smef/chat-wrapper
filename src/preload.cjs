@@ -56,9 +56,13 @@ const NativeNotification = window.Notification;
 
 class PatchedNotification extends NativeNotification {
   constructor(title, options) {
+    if (process.env.DEBUG_NAV) console.log('[notif-page] Notification() constructed:', title);
     super(title, options);
     this.addEventListener('click', () => {
       ipcRenderer.send('notification-click');
+    });
+    this.addEventListener('error', (e) => {
+      if (process.env.DEBUG_NAV) console.log('[notif-page] error event', e);
     });
   }
 
@@ -72,3 +76,70 @@ Object.defineProperty(PatchedNotification, 'permission', {
 });
 
 window.Notification = PatchedNotification;
+
+// Electron's "persistent" notification path (ServiceWorkerRegistration
+// .showNotification, used for Chat's real background message notifications
+// and its in-app "Show an example" preview) has a longstanding
+// implementation gap and silently rejects: electron/electron#13041. When a
+// page-context call fails, fall back to a plain page-context Notification —
+// legal here, unlike inside the service worker itself. The service worker's
+// own internal calls (sw-preload.cjs) can't construct a Notification
+// directly, so they message this page to do it instead; listen for that too.
+if (typeof ServiceWorkerRegistration !== 'undefined') {
+  const nativeShowNotification = ServiceWorkerRegistration.prototype.showNotification;
+  ServiceWorkerRegistration.prototype.showNotification = function (title, options) {
+    return nativeShowNotification.call(this, title, options).catch((error) => {
+      if (process.env.DEBUG_NAV) console.log('[notif-page] showNotification failed, falling back:', error);
+      const fallbackOptions = { ...options };
+      delete fallbackOptions.actions; // only supported for persistent notifications
+      return new window.Notification(title, fallbackOptions);
+    });
+  };
+}
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.addEventListener('message', (event) => {
+    const data = event.data;
+    if (data && data.__swNotificationFallback) {
+      try {
+        new window.Notification(data.title, data.options);
+      } catch (error) {
+        if (process.env.DEBUG_NAV) console.log('[notif-page] SW fallback notification failed:', error);
+      }
+    }
+  });
+}
+
+// Chat may signal unread counts via the modern Badging API instead of (or
+// in addition to) changing document.title — forward both to the main
+// process, which decides whether to fire a fallback notification.
+if (navigator.setAppBadge) {
+  const nativeSetAppBadge = navigator.setAppBadge.bind(navigator);
+  navigator.setAppBadge = (count) => {
+    ipcRenderer.send('app-badge', count ?? 0);
+    return nativeSetAppBadge(count);
+  };
+}
+if (navigator.clearAppBadge) {
+  const nativeClearAppBadge = navigator.clearAppBadge.bind(navigator);
+  navigator.clearAppBadge = () => {
+    ipcRenderer.send('app-badge', 0);
+    return nativeClearAppBadge();
+  };
+}
+
+if (process.env.DEBUG_NAV) {
+  window.addEventListener('DOMContentLoaded', async () => {
+    if (!('serviceWorker' in navigator)) {
+      console.log('[notif-page] no serviceWorker support');
+      return;
+    }
+    const registrations = await navigator.serviceWorker.getRegistrations();
+    console.log(
+      '[notif-page] service worker registrations:',
+      registrations.length,
+      'controller:',
+      !!navigator.serviceWorker.controller,
+    );
+  });
+}
