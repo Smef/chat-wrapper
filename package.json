@@ -1,5 +1,5 @@
 {
-  "name": "GoogleChatPake",
+  "name": "chat-wrapper",
   "productName": "Chat Wrapper",
   "version": "1.0.0",
   "description": "Unofficial Google Chat desktop app with background notifications",
