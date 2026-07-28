@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+
+# Build output (electron-builder)
+dist/
+out/
+
+# Logs
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.log
+
+# OS files
+.DS_Store
+.DS_Store?
+Thumbs.db
+
+# Editor/IDE
+.vscode/
+.idea/
+*.swp
+
+# Env files
+.env
+.env.local
+
+# electron-builder cache
+.cache/
