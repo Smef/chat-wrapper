@@ -6,7 +6,10 @@
   "main": "src/main.js",
   "scripts": {
     "start": "electron .",
-    "dist": "electron-builder"
+    "dist": "electron-builder -mwl",
+    "dist:mac": "electron-builder --mac",
+    "dist:win": "electron-builder --win",
+    "dist:linux": "electron-builder --linux"
   },
   "keywords": [],
   "author": "",
@@ -37,16 +40,22 @@
     "mac": {
       "icon": "build/icon.icns",
       "category": "public.app-category.productivity",
-      "target": "dmg"
+      "target": [
+        { "target": "dmg", "arch": ["x64", "arm64"] }
+      ]
     },
     "afterSign": "scripts/afterSign.cjs",
     "win": {
       "icon": "build/icon.png",
-      "target": "nsis"
+      "target": [
+        { "target": "nsis", "arch": ["x64", "arm64"] }
+      ]
     },
     "linux": {
       "icon": "build/icon.png",
-      "target": "AppImage",
+      "target": [
+        { "target": "AppImage", "arch": ["x64", "arm64"] }
+      ],
       "category": "Network"
     }
   }
