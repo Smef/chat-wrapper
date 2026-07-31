@@ -25,7 +25,7 @@ fi
 
 if [[ "${SKIP_BUILD:-}" != "1" ]]; then
   echo "Building installers (mac/win/linux)..."
-  npm run dist
+  pnpm run dist
 else
   echo "Skipping build (SKIP_BUILD=1)"
 fi
