@@ -2,6 +2,10 @@
 
 Unofficial Google Chat desktop app (Electron) with background notifications.
 
+## Download Now
+
+Download the latest version from the [releases page](https://github.com/Smef/chat-wrapper/releases).
+
 ## Prerequisites
 
 - [Node.js](https://nodejs.org/) 18+
